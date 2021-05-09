@@ -1,0 +1,23 @@
+{
+  "name": "compgraf-ac2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ViniciusIbanez/CompGraf-Ac2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ViniciusIbanez/CompGraf-Ac2/issues"
+  },
+  "homepage": "https://github.com/ViniciusIbanez/CompGraf-Ac2#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
