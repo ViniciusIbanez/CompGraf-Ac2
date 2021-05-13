@@ -57,7 +57,8 @@
             createSkyBox(scene);
             keyboardInput = keyboardListener(scene);
             character = createCharacter(scene, camera, keyboardInput);
-            house = createHauntedHouse(scene);
+            house = genericPropLoader(scene, {x:21, y:0, z:0}, 'assets/props/', 'haunted_house.glb', 65);
+            barrel = genericPropLoader(scene, {x:3, y:0, z:0}, 'assets/props/', 'ExplodingBarrel.glb', 0.0235);
             return scene;
         };
 
@@ -93,11 +94,18 @@
             skybox.material = skyboxMaterial;
         }
 
-        createHauntedHouse = function (scene) {
-            BABYLON.SceneLoader.ImportMesh("", "assets/props/", "haunted_house.glb", scene, function (newMeshes) {
-                var house = newMeshes[0];
-                house.scaling.scaleInPlace(65);
-                house.position.x = 25;
+        genericPropLoader = function (scene, postion, path, file, scale) {
+            //* position must be an object on the following model:
+            //* postion = {'x': number? | 0, 'y': number? | 0, 'z': number? | 0}
+            const propPosition = postion;
+            const propscale = scale;
+            BABYLON.SceneLoader.ImportMesh("", path, file, scene, function (newMeshes) {
+                var prop = newMeshes[0];
+                prop.scaling.scaleInPlace(propscale)
+                prop.position.x = propPosition.x;
+                prop.position.y = propPosition.y;
+                prop.position.z = propPosition.z;
+                console.log(file, ' loaded at', propPosition);
             });
         }
 
