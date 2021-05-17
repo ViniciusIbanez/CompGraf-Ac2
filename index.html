@@ -22,33 +22,75 @@
     <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
     <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
     <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
-
-    <style>
-        html,
-        body {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        #renderCanvas {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-    </style>
 </head>
+<style>
+    html,
+    body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #3d3d3d;
+    }
+
+    #renderCanvas {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        touch-action: none;
+        margin-bottom: 0;
+    }
+
+    #topHud {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        pointer-events: none;
+        margin: 10;
+    }
+</style>
 
 <body>
+
+    <div id="topHud">
+        <br>
+        <FONT FACE=Arial COLOR="v" SIZE=+1>Vinicius Ibanez 180023/Victor Marciano 180131</FONT>
+        <div id="colectedItens">
+            <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard">Itens Coletados 0/10</FONT>
+        </div>
+        <div>
+            <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard">Coletar o item: </FONT>
+            <svg width="30" height="30">
+                <rect width="300" height="100" style="fill:#FFEC00;" id="nextIten" />
+            </svg>
+        </div>
+
+    </div>
     <canvas id="renderCanvas"></canvas>
+
     <script>
         var canvas = document.getElementById("renderCanvas");
         var engine = null;
         var scene = null;
         var sceneToRender = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
+        const validRadius = 200;
+        const repositionDelta = 0.5;
+
+        const colorsConfig = ["#000000",
+            "#FB0303",
+            "#1AFB03",
+            "#06F4DB",
+            "#0C63FD",
+            "#9D00FC",
+            "#FB00D1",
+            "#802E2E",
+            "#FFEC00",
+            "#FFFFFF"]
+        var elementsPositions = [];
+        var collectedItens = 0;
+
         var createScene = function () {
             // This creates a basic Babylon Scene object (non-mesh)
             var scene = new BABYLON.Scene(engine);
@@ -56,11 +98,27 @@
             createGround(scene);
             createSkyBox(scene);
             keyboardInput = keyboardListener(scene);
-            character = createCharacter(scene, camera, keyboardInput);
+
+            scene.scoreboard = document.getElementById('scoreBoard');
+            scene.nextIten = document.getElementById('nextIten');
+            scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
+            scene.itens = new BABYLON.Mesh('itens', scene);
+            createItensToCollect(scene);
+            
+    
+            id = "iten_" + collectedItens;
+            heroMesh = scene.getMeshesByID(id)
+            console.log(heroMesh)
+            character = createCharacter(scene, camera, keyboardInput, heroMesh);
             house = genericPropLoader(scene, {x:21, y:0, z:0}, 'assets/props/', 'haunted_house.glb', 65);
             barrel = genericPropLoader(scene, {x:3, y:0, z:0}, 'assets/props/', 'ExplodingBarrel.glb', 0.0235);
-            return scene;
-        };
+            boomBox = genericPropLoader(scene, {x:3, y:2.0, z:0}, 'assets/props/', 'BoomBox.glb', 32.0);
+            ufo = genericPropLoader(scene, {x:3, y:2.0, z:0}, 'assets/props/', 'ufo.glb', 32.0);
+            barrel_2 = genericPropLoader(scene, {x:12, y:0, z:3}, 'assets/props/', 'ExplodingBarrel.glb', 0.0235);
+            boomBox_2 = genericPropLoader(scene, {x:12, y:2.0, z:3}, 'assets/props/', 'BoomBox.glb', 32.0);
+            return scene
+        }
+
 
         setupScene = function (scene) {
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 10, new BABYLON.Vector3(0, -5, 0), scene);
@@ -69,6 +127,7 @@
             camera.lowerRadiusLimit = 2;
             camera.upperRadiusLimit = 10;
             camera.wheelDeltaPercentage = 0.01;
+            colorsConfig.sort((a, b) => 0.5 - Math.random())
 
             var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
@@ -77,9 +136,10 @@
         }
 
         createGround = function (scene) {
+
             const largeGroundMat = new BABYLON.StandardMaterial("largeGroundMat");
             largeGroundMat.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/valleygrass.png");
-            const largeGround = BABYLON.MeshBuilder.CreateGroundFromHeightMap("largeGround", "https://assets.babylonjs.com/environments/villageheightmap.png", { width: 500, height: 500, subdivisions: 20, minHeight: 0, maxHeight: 10 });
+            const largeGround = BABYLON.MeshBuilder.CreateGroundFromHeightMap("largeGround", "https://assets.babylonjs.com/environments/villageheightmap.png", { width: 1000, height: 1000, subdivisions: 20, minHeight: 0, maxHeight: 15 });
             largeGround.material = largeGroundMat;
         }
 
@@ -87,7 +147,7 @@
             const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 500 }, scene);
             const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
             skyboxMaterial.backFaceCulling = false;
-            skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("assets/skybox/skybox", scene);
+            skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("/assets/skybox/skybox", scene);
             skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
             skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
             skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -121,10 +181,9 @@
             return keyboardInput
         }
 
-
-        createCharacter = function (scene, camera, keyboardInput) {
+        createCharacter = function (scene, camera, keyboardInput, heroMesh) {
             BABYLON.SceneLoader.ImportMesh("", "https://assets.babylonjs.com/meshes/", "HVGirl.glb", scene, function (newMeshes, particleSystems, skeletons, animationGroups) {
-                var hero = newMeshes[0];
+                hero = newMeshes[0];
 
                 //Scale the model down        
                 hero.scaling.scaleInPlace(0.1);
@@ -133,7 +192,7 @@
                 camera.target = hero;
 
                 //Hero character variables 
-                var heroSpeed = 0.2;
+                var heroSpeed = 1;
                 var heroSpeedBackwards = 0.01;
                 var heroRotationSpeed = 0.1;
 
@@ -146,31 +205,63 @@
 
 
 
-                //Rendering loop (executed for everyframe)
                 scene.onBeforeRenderObservable.add(() => {
+
+                    if(collectedItens <10){
+                    if (hero.intersectsMesh(heroMesh[0], true)) {
+                        
+                        
+                            console.log(collectedItens);
+                            deleteMesh(scene, "iten_" + collectedItens);
+                            collectedItens += 1;
+                            scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
+                            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/10";
+                            id = "iten_" + collectedItens;
+                            var music = new BABYLON.Sound("collected", "/assets/itenCollected.wav", scene, null, {
+                            loop: false,
+                            autoplay: true
+                            });
+                                                        
+                            heroMesh = scene.getMeshesByID(id);
+                            console.log(heroMesh);
+                            
+                        } 
+                    }else{
+                            sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+
+                        }
+
                     var keydown = false;
-                    //Manage the movements of the character (e.g. position, direction)
                     if (keyboardInput["w"]) {
-                        hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
-                        keydown = true;
+                        if (validatePosition(hero, validRadius)) {
+                            hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
+                            keydown = true;
+                        }
+
                     }
                     if (keyboardInput["s"]) {
-                        hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
-                        keydown = true;
+                        if (validatePosition(hero, validRadius)) {
+                            hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
+                            keydown = true;
+                        }
+
                     }
                     if (keyboardInput["a"]) {
-                        hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
-                        keydown = true;
+                        if (validatePosition(hero, validRadius)) {
+                            hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+                            keydown = true;
+                        }
                     }
                     if (keyboardInput["d"]) {
-                        hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
-                        keydown = true;
+                        if (validatePosition(hero, validRadius)) {
+                            hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+                            keydown = true;
+                        }
                     }
                     if (keyboardInput["b"]) {
                         keydown = true;
                     }
 
-                    //Manage animations to be played  
                     if (keydown) {
                         if (!animating) {
                             animating = true;
@@ -181,6 +272,8 @@
                             else if
                                 (keyboardInput["b"]) {
                                 //Samba!
+                                scene.scoreboard.innerText = "Itens Coletados 1/10"
+                                scene.nextIten.setAttribute("style", "fill:rgb(0,0,0);");
                                 sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
                             }
                             else {
@@ -205,10 +298,81 @@
                         }
                     }
                 });
+
             });
 
         }
 
+        validatePosition = function (hero, size) {
+
+
+            if (Math.sqrt((Math.pow(hero.position.x, 2) + Math.pow(hero.position.z, 2))) > size) {
+
+                if (hero.position.x > 0) {
+                    hero.position.x = hero.position.x - repositionDelta;
+                } else {
+                    hero.position.x = hero.position.x + repositionDelta;
+                }
+                if (hero.position.z > 0) {
+                    hero.position.z = hero.position.z - repositionDelta;
+                } else {
+                    hero.position.z = hero.position.z + repositionDelta;
+                }
+
+                return false;
+            }
+            //console.log(hero.position.x + " "+ hero.position.y+ " "+ hero.position.z)
+            return true;
+        }
+
+        createItensToCollect = function (scene) {
+
+
+            for (i = 0; i < 10; i++) {
+                id = "iten_" + i;
+                //box_mesh = new BABYLON.Mesh(id, scene);
+                size = 1;
+                var mat = new BABYLON.StandardMaterial("", scene);
+                mat.diffuseColor = BABYLON.Color3.FromHexString(colorsConfig[i])
+                const box = BABYLON.Mesh.CreateBox(id, size, scene);
+                box.material = mat;
+                retrieveBoxPosition(scene);
+                box.position.x = elementsPositions[i][0];
+                box.position.z = elementsPositions[i][1]
+                console.log("id: "+ id+" Posição: " +box.position.x + ", "+box.position.z +" cor: "+colorsConfig[i]);
+                box.position.y = .5;
+                scene.itens.addChild(box);
+                
+
+            }
+
+        }
+        retrieveBoxPosition = function (scene) {
+
+            var isValid = false;
+            while (!isValid) {
+                var x = Math.floor(Math.random() * validRadius - 150) * (Math.random() < 0.5 ? -1 : 1);
+                var z = Math.floor(Math.random() * validRadius - 150) * (Math.random() < 0.5 ? -1 : 1);
+
+                position = [x, z]
+
+                if (!elementsPositions.includes(position)) {
+                    elementsPositions.push(position);
+                    isValid = true;
+                }
+
+            }
+
+        }
+
+        deleteMesh = function(scene, meshId){
+            meshes = scene.getMeshesByID(meshId)     
+            for (var i=0; i< meshes.length; i++){
+                //
+                scene.removeMesh(meshes[i]);
+    
+            }
+        }
         var engine;
         try {
             engine = createDefaultEngine();
