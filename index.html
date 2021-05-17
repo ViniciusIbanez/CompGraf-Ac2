@@ -78,16 +78,19 @@
         const validRadius = 200;
         const repositionDelta = 0.5;
 
-        const colorsConfig = ["#000000",
-            "#FB0303",
-            "#1AFB03",
-            "#06F4DB",
-            "#0C63FD",
-            "#9D00FC",
-            "#FB00D1",
-            "#802E2E",
-            "#FFEC00",
-            "#FFFFFF"]
+        const colorsConfig = [
+                            "#000000",
+                            "#FB0303",
+                            "#1AFB03",
+                            "#06F4DB",
+                            "#0C63FD",
+                            "#9D00FC",
+                            "#FB00D1",
+                            "#802E2E",
+                            "#FFEC00",
+                            "#FFFFFF"
+                             ]
+
         var elementsPositions = [];
         var collectedItens = 0;
 
@@ -101,14 +104,14 @@
 
             scene.scoreboard = document.getElementById('scoreBoard');
             scene.nextIten = document.getElementById('nextIten');
+            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/"+colorsConfig.length;
             scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
             scene.itens = new BABYLON.Mesh('itens', scene);
             createItensToCollect(scene);
-            
-    
+
+
             id = "iten_" + collectedItens;
             heroMesh = scene.getMeshesByID(id)
-            console.log(heroMesh)
             character = createCharacter(scene, camera, keyboardInput, heroMesh);
 
             return scene
@@ -178,6 +181,8 @@
                 var heroRotationSpeed = 0.1;
 
                 var animating = true;
+                var stillPlaying = true
+                var playMusic = true;
 
                 const walkAnim = scene.getAnimationGroupByName("Walking");
                 const walkBackAnim = scene.getAnimationGroupByName("WalkingBack");
@@ -188,58 +193,67 @@
 
                 scene.onBeforeRenderObservable.add(() => {
 
-                    if(collectedItens <10){
-                    if (hero.intersectsMesh(heroMesh[0], true)) {
-                        
-                        
-                            console.log(collectedItens);
-                            deleteMesh(scene, "iten_" + collectedItens);
+                    if (collectedItens < colorsConfig.length) {
+                        if (hero.intersectsMesh(heroMesh[0], true)) {
+
+                            animateIten(scene, "iten_" + collectedItens);
+                            
                             collectedItens += 1;
                             scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
-                            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/10";
+                            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/"+colorsConfig.length;
                             id = "iten_" + collectedItens;
                             var music = new BABYLON.Sound("collected", "/assets/itenCollected.wav", scene, null, {
-                            loop: false,
-                            autoplay: true
+                                loop: false,
+                                autoplay: true
                             });
-                                                        
+
                             heroMesh = scene.getMeshesByID(id);
-                            console.log(heroMesh);
-                            
-                        } 
-                    }else{
-                            sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
 
                         }
+                    } else {
+                        camera.target = hero;
+                        sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+                        keydown = true;
+                        stillPlaying = false;
+                        if(playMusic){
+                            var music = new BABYLON.Sound("win", "/assets/win.wav", scene, null, {
+                                loop: false,
+                                autoplay: true
+                            });
+                            playMusic = false;
+                        }
+                        
+
+                    }
 
                     var keydown = false;
-                    if (keyboardInput["w"]) {
+                    if (keyboardInput["w"] && stillPlaying) {
                         if (validatePosition(hero, validRadius)) {
                             hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
                             keydown = true;
                         }
 
                     }
-                    if (keyboardInput["s"]) {
+                    if (keyboardInput["s"] && stillPlaying) {
                         if (validatePosition(hero, validRadius)) {
                             hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
                             keydown = true;
                         }
 
                     }
-                    if (keyboardInput["a"]) {
+                    if (keyboardInput["a"] && stillPlaying) {
                         if (validatePosition(hero, validRadius)) {
                             hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
                             keydown = true;
                         }
                     }
-                    if (keyboardInput["d"]) {
+                    if (keyboardInput["d"]&& stillPlaying) {
                         if (validatePosition(hero, validRadius)) {
                             hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
                             keydown = true;
                         }
                     }
-                    if (keyboardInput["b"]) {
+                    if (keyboardInput["b"]&& stillPlaying) {
                         keydown = true;
                     }
 
@@ -309,10 +323,10 @@
         createItensToCollect = function (scene) {
 
 
-            for (i = 0; i < 10; i++) {
+            for (i = 0; i < colorsConfig.length; i++) {
                 id = "iten_" + i;
                 //box_mesh = new BABYLON.Mesh(id, scene);
-                size = 1;
+                size = 2;
                 var mat = new BABYLON.StandardMaterial("", scene);
                 mat.diffuseColor = BABYLON.Color3.FromHexString(colorsConfig[i])
                 const box = BABYLON.Mesh.CreateBox(id, size, scene);
@@ -320,8 +334,8 @@
                 retrieveBoxPosition(scene);
                 box.position.x = elementsPositions[i][0];
                 box.position.z = elementsPositions[i][1]
-                console.log("id: "+ id+" Posição: " +box.position.x + ", "+box.position.z +" cor: "+colorsConfig[i]);
-                box.position.y = .5;
+                //console.log("id: " + id + " Posição: " + box.position.x + ", " + box.position.z + " cor: " + colorsConfig[i]);
+                box.position.y = size/2;
                 scene.itens.addChild(box);
                 
 
@@ -344,14 +358,49 @@
 
             }
 
+
         }
 
-        deleteMesh = function(scene, meshId){
-            meshes = scene.getMeshesByID(meshId)     
-            for (var i=0; i< meshes.length; i++){
+        animateIten = async function(scene, meshId){
+
+            
+            mesh = scene.getMeshesByID(meshId);
+            ySlide = new BABYLON.Animation("ySlide", "position.y", 100, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            let keyFrames = [];
+
+            keyFrames.push({
+                frame: 0,
+                value: 0.0
+            });
+
+            keyFrames.push({
+                frame: 30,
+                value: 5
+            });
+            keyFrames.push({
+                frame: 100,
+                value: 10
+
+            });
+            ySlide.setKeys(keyFrames);
+            scene.beginDirectAnimation(mesh, [ySlide], 0, 1000, true);
+                
+            
+            await sleep(1000)
+            deleteMesh(scene, meshId);
+
+        }
+        sleep = async function(time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
+        }
+        
+
+        deleteMesh = function (scene, meshId) {
+            meshes = scene.getMeshesByID(meshId)
+            for (var i = 0; i < meshes.length; i++) {
                 //
                 scene.removeMesh(meshes[i]);
-    
+
             }
         }
         var engine;
