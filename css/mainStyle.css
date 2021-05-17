@@ -1,0 +1,10 @@
+#topHud{
+	position: absolute;
+	top: 0;
+	width: 100%;
+    pointer-events : none;
+    padding-left: 40px;
+},
+#colectedItens{
+    padding-left: 40px;
+}
