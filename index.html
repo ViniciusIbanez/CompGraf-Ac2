@@ -39,22 +39,30 @@
             height: 100%;
             margin: 0;
             touch-action: none;
+            margin-bottom: 0;
         }
     </style>
 </head>
 
 <body>
     
-    <div id="screen">
+    
         <div id="topHud">
             <br>
             <FONT FACE=Arial COLOR="v" SIZE=+1>Vinicius Ibanez 180023/Victor Marciano 180131</FONT>
             <div id ="colectedItens">
                 <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard" >Itens Coletados 0/10</FONT>
             </div>
+            <div>
+                <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard" >Coletar o item: </FONT>
+                <svg width="30" height="30">
+                    <rect width="300" height="100" style="fill:rgb(0,0,255);" id="nextIten" />
+                  </svg>
+            </div>
+            
         </div>
         <canvas id="renderCanvas"></canvas>
-    </div>
+   
     
     <script>
         var canvas = document.getElementById("renderCanvas");
@@ -74,6 +82,7 @@
             keyboardInput = keyboardListener(scene);
             character = createCharacter(scene, camera, keyboardInput);
             scene.scoreboard = document.getElementById('scoreBoard');
+            scene.nextIten = document.getElementById('nextIten');
             
             return scene;
 
@@ -187,7 +196,8 @@
                             else if
                                 (keyboardInput["b"]) {
                                 //Samba!
-                                scene.scoreboard.innerText = "1/10"
+                                scene.scoreboard.innerText = "Itens Coletados 1/10"
+                                scene.nextIten.setAttribute("style", "fill:rgb(0,0,0);");
                                 sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
                             }
                             else {
