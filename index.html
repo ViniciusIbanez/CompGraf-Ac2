@@ -56,13 +56,13 @@
     <div id="topHud">
         <br>
         <FONT FACE=Arial COLOR="v" SIZE=+1>Vinicius Ibanez 180023/Victor Marciano 180131</FONT>
-        <div id="colectedItens">
-            <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard">Itens Coletados 0/10</FONT>
+        <div id="colecteditems">
+            <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard">items Coletados 0/10</FONT>
         </div>
         <div>
             <FONT FACE=Arial COLOR="#000000" SIZE=+2 id="scoreBoard">Coletar o item: </FONT>
             <svg width="30" height="30">
-                <rect width="300" height="100" style="fill:#FFEC00;" id="nextIten" />
+                <rect width="300" height="100" style="fill:#FFEC00;" id="nextitem" />
             </svg>
         </div>
 
@@ -92,7 +92,7 @@
                              ]
 
         var elementsPositions = [];
-        var collectedItens = 0;
+        var collecteditems = 0;
 
         var createScene = function () {
             // This creates a basic Babylon Scene object (non-mesh)
@@ -103,14 +103,14 @@
             keyboardInput = keyboardListener(scene);
 
             scene.scoreboard = document.getElementById('scoreBoard');
-            scene.nextIten = document.getElementById('nextIten');
-            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/"+colorsConfig.length;
-            scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
-            scene.itens = new BABYLON.Mesh('itens', scene);
-            createItensToCollect(scene);
+            scene.nextitem = document.getElementById('nextitem');
+            scene.scoreboard.innerText = "items Coletados " + collecteditems + "/"+colorsConfig.length;
+            scene.nextitem.setAttribute("style", "fill:" + colorsConfig[collecteditems] + ";");
+            scene.items = new BABYLON.Mesh('items', scene);
+            createitemsToCollect(scene);
 
 
-            id = "iten_" + collectedItens;
+            id = "item_" + collecteditems;
             heroMesh = scene.getMeshesByID(id)
             character = createCharacter(scene, camera, keyboardInput, heroMesh);
 
@@ -193,16 +193,16 @@
 
                 scene.onBeforeRenderObservable.add(() => {
 
-                    if (collectedItens < colorsConfig.length) {
+                    if (collecteditems < colorsConfig.length) {
                         if (hero.intersectsMesh(heroMesh[0], true)) {
 
-                            animateIten(scene, "iten_" + collectedItens);
+                            animateitem(scene, "item_" + collecteditems);
                             
-                            collectedItens += 1;
-                            scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
-                            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/"+colorsConfig.length;
-                            id = "iten_" + collectedItens;
-                            var music = new BABYLON.Sound("collected", "/assets/itenCollected.wav", scene, null, {
+                            collecteditems += 1;
+                            scene.nextitem.setAttribute("style", "fill:" + colorsConfig[collecteditems] + ";");
+                            scene.scoreboard.innerText = "items Coletados " + collecteditems + "/"+colorsConfig.length;
+                            id = "item_" + collecteditems;
+                            var music = new BABYLON.Sound("collected", "/assets/itemCollected.wav", scene, null, {
                                 loop: false,
                                 autoplay: true
                             });
@@ -267,8 +267,8 @@
                             else if
                                 (keyboardInput["b"]) {
                                 //Samba!
-                                scene.scoreboard.innerText = "Itens Coletados 1/10"
-                                scene.nextIten.setAttribute("style", "fill:rgb(0,0,0);");
+                                scene.scoreboard.innerText = "items Coletados 1/10"
+                                scene.nextitem.setAttribute("style", "fill:rgb(0,0,0);");
                                 sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
                             }
                             else {
@@ -320,11 +320,11 @@
             return true;
         }
 
-        createItensToCollect = function (scene) {
+        createitemsToCollect = function (scene) {
 
 
             for (i = 0; i < colorsConfig.length; i++) {
-                id = "iten_" + i;
+                id = "item_" + i;
                 //box_mesh = new BABYLON.Mesh(id, scene);
                 size = 2;
                 var mat = new BABYLON.StandardMaterial("", scene);
@@ -336,7 +336,7 @@
                 box.position.z = elementsPositions[i][1]
                 //console.log("id: " + id + " Posição: " + box.position.x + ", " + box.position.z + " cor: " + colorsConfig[i]);
                 box.position.y = size/2;
-                scene.itens.addChild(box);
+                scene.items.addChild(box);
                 
 
             }
@@ -361,7 +361,7 @@
 
         }
 
-        animateIten = async function(scene, meshId){
+        animateitem = async function(scene, meshId){
 
             
             mesh = scene.getMeshesByID(meshId);
