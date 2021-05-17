@@ -102,17 +102,16 @@
             scene.scoreboard = document.getElementById('scoreBoard');
             scene.nextIten = document.getElementById('nextIten');
             scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
-            itens = new BABYLON.Mesh('itens', scene);
-            createItensToCollect(scene, itens);
-
+            scene.itens = new BABYLON.Mesh('itens', scene);
+            createItensToCollect(scene);
+            
+    
             id = "iten_" + collectedItens;
-            heroMesh = scene.getMeshesByID(id)[1]
+            heroMesh = scene.getMeshesByID(id)
+            console.log(heroMesh)
             character = createCharacter(scene, camera, keyboardInput, heroMesh);
 
-
-
             return scene
-
 
 
         }
@@ -144,7 +143,7 @@
             const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 500 }, scene);
             const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
             skyboxMaterial.backFaceCulling = false;
-            skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("assets/skybox/skybox", scene);
+            skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("/assets/skybox/skybox", scene);
             skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
             skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
             skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -174,7 +173,7 @@
                 camera.target = hero;
 
                 //Hero character variables 
-                var heroSpeed = .2;
+                var heroSpeed = 1;
                 var heroSpeedBackwards = 0.01;
                 var heroRotationSpeed = 0.1;
 
@@ -189,15 +188,29 @@
 
                 scene.onBeforeRenderObservable.add(() => {
 
+                    if(collectedItens <10){
+                    if (hero.intersectsMesh(heroMesh[0], true)) {
+                        
+                        
+                            console.log(collectedItens);
+                            deleteMesh(scene, "iten_" + collectedItens);
+                            collectedItens += 1;
+                            scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
+                            scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/10";
+                            id = "iten_" + collectedItens;
+                            var music = new BABYLON.Sound("collected", "/assets/itenCollected.wav", scene, null, {
+                            loop: false,
+                            autoplay: true
+                            });
+                                                        
+                            heroMesh = scene.getMeshesByID(id);
+                            console.log(heroMesh);
+                            
+                        } 
+                    }else{
+                            sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
 
-                    if (hero.intersectsMesh(heroMesh, true)) {
-                        collectedItens += 1;
-                        scene.nextIten.setAttribute("style", "fill:" + colorsConfig[collectedItens] + ";");
-                        scene.scoreboard.innerText = "Itens Coletados " + collectedItens + "/10";
-                        id = "iten_" + collectedItens;
-                        heroMesh = scene.getMeshesByID(id)[1];
-
-                    }
+                        }
 
                     var keydown = false;
                     if (keyboardInput["w"]) {
@@ -293,12 +306,12 @@
             return true;
         }
 
-        createItensToCollect = function (scene, mesh) {
+        createItensToCollect = function (scene) {
 
 
             for (i = 0; i < 10; i++) {
                 id = "iten_" + i;
-                box_mesh = new BABYLON.Mesh(id, scene);
+                //box_mesh = new BABYLON.Mesh(id, scene);
                 size = 1;
                 var mat = new BABYLON.StandardMaterial("", scene);
                 mat.diffuseColor = BABYLON.Color3.FromHexString(colorsConfig[i])
@@ -307,10 +320,10 @@
                 retrieveBoxPosition(scene);
                 box.position.x = elementsPositions[i][0];
                 box.position.z = elementsPositions[i][1]
-                //console.log("id: "+ id+" Posição: " +box.position.x + ", "+box.position.z +" cor: "+colorsConfig[i]);
+                console.log("id: "+ id+" Posição: " +box.position.x + ", "+box.position.z +" cor: "+colorsConfig[i]);
                 box.position.y = .5;
-                box_mesh.addChild(box);
-                mesh.addChild(box_mesh)
+                scene.itens.addChild(box);
+                
 
             }
 
@@ -331,6 +344,15 @@
 
             }
 
+        }
+
+        deleteMesh = function(scene, meshId){
+            meshes = scene.getMeshesByID(meshId)     
+            for (var i=0; i< meshes.length; i++){
+                //
+                scene.removeMesh(meshes[i]);
+    
+            }
         }
         var engine;
         try {
