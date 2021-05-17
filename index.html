@@ -37,6 +37,7 @@
         #renderCanvas {
             width: 100%;
             height: 100%;
+            margin: 0;
             touch-action: none;
         }
     </style>
@@ -44,6 +45,7 @@
 
 <body>
     
+    <div id="screen">
         <div id="topHud">
             <br>
             <FONT FACE=Arial COLOR="v" SIZE=+1>Vinicius Ibanez 180023/Victor Marciano 180131</FONT>
@@ -52,6 +54,7 @@
             </div>
         </div>
         <canvas id="renderCanvas"></canvas>
+    </div>
     
     <script>
         var canvas = document.getElementById("renderCanvas");
