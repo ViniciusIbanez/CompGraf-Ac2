@@ -1,6 +1,5 @@
 var express = require('express');
 var app = express();
-app.use(express.static(path.join(__dirname, '/../app'), { maxAge: 86400000 }))
 var path = require('path');
 
 app.get('/', function (req, res) {
