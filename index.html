@@ -48,6 +48,16 @@
         width: 100%;
         pointer-events: none;
         margin: 10;
+        margin-left: 100px;
+    }
+    #youWin {
+        position: absolute;
+        top: 20;
+        width: 100%;
+        pointer-events: none;
+        margin: 20;
+        text-align: center;
+
     }
 </style>
 
@@ -64,8 +74,16 @@
             <svg width="30" height="30">
                 <rect width="300" height="100" style="fill:#FFEC00;" id="nextitem" />
             </svg>
+            <div id="restart">
+                <FONT FACE=Arial COLOR="#000000" SIZE=+2>Para reiniciar pressione r</FONT>
+            </div>
         </div>
 
+    </div>
+    <div id="youWin" style="visibility: hidden;">
+        <FONT FACE=Arial COLOR="v" SIZE=+5>Fim de Jogo !!</FONT>
+        <br>
+        <FONT FACE=Arial COLOR="v" SIZE=+2>Pressione r para reiniciar !!</FONT>
     </div>
     <canvas id="renderCanvas"></canvas>
 
@@ -116,7 +134,8 @@
             house = genericPropLoader(scene, {x:21, y:0, z:0}, 'assets/props/', 'haunted_house.glb', 65);
             barrel = genericPropLoader(scene, {x:3, y:0, z:0}, 'assets/props/', 'ExplodingBarrel.glb', 0.0235);
             boomBox = genericPropLoader(scene, {x:3, y:2.0, z:0}, 'assets/props/', 'BoomBox.glb', 32.0);
-            ufo = genericPropLoader(scene, {x:3, y:2.0, z:0}, 'assets/props/', 'ufo.glb', 32.0);
+            //ufo = genericPropLoader(scene, {x:3, y:50.0, z:0}, 'assets/props/', 'ufo.glb', 32.0);
+
             barrel_2 = genericPropLoader(scene, {x:12, y:0, z:3}, 'assets/props/', 'ExplodingBarrel.glb', 0.0235);
             boomBox_2 = genericPropLoader(scene, {x:12, y:2.0, z:3}, 'assets/props/', 'BoomBox.glb', 32.0);
             return scene
@@ -165,6 +184,7 @@
             BABYLON.SceneLoader.ImportMesh("", path, file, scene, function (newMeshes) {
                 var prop = newMeshes[0];
                 prop.scaling.scaleInPlace(propscale)
+                prop.music = null;
                 prop.position.x = propPosition.x;
                 prop.position.y = propPosition.y;
                 prop.position.z = propPosition.z;
@@ -195,7 +215,7 @@
                 camera.target = hero;
 
                 //Hero character variables 
-                var heroSpeed = 1;
+                var heroSpeed = .5;
                 var heroSpeedBackwards = 0.01;
                 var heroRotationSpeed = 0.1;
 
@@ -241,11 +261,17 @@
                             });
                             playMusic = false;
                         }
-                        
+                        youWin = document.getElementById('youWin');
+                        youWin.setAttribute("style", "visibility: visible;");
 
                     }
 
                     var keydown = false;
+
+                    if (keyboardInput["r"]) {
+                        location.reload();
+                    
+                    }
                     if (keyboardInput["w"] && stillPlaying) {
                         if (validatePosition(hero, validRadius)) {
                             hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
