@@ -395,7 +395,7 @@
 
                 position = [x, z]
 
-                if (!elementsPositions.includes(position)) {
+                if (!elementsPositions.includes(position) && (x+z > 30 ||x+z < -30)) {
                     elementsPositions.push(position);
                     isValid = true;
                 }
